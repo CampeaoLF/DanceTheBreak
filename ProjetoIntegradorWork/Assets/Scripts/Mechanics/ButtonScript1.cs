@@ -18,9 +18,9 @@ public class ButtonScript : NetworkBehaviour
     [Header("Sprite")]
     [SerializeField] public Sprite[] sprites;
     [SerializeField] public Sprite[] cenario;
-    [SerializeField] public NetworkObject backGround1;
-    [SerializeField] public NetworkObject backGround2;
-    [SerializeField] public NetworkObject backGround3;
+    [Networked, OnChangedRender(nameof(ChangeScenario))] public NetworkObject backGround1 { set; get; }
+    [Networked, OnChangedRender(nameof(ChangeScenario))] public NetworkObject backGround2 { set; get; }
+    [Networked, OnChangedRender(nameof(ChangeScenario))] public NetworkObject backGround3 { set; get; }
 
     [Header("Animação")]
     private GameObject animManager;
