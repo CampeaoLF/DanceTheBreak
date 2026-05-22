@@ -106,7 +106,14 @@ public class MultiplayerController : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        
+        if (runner.IsServer)
+        {
+            // Quando spawna o prefab do player na rede:
+            NetworkObject networkPlayerObject = runner.Spawn(playerPrefab, Vector3.zero, Quaternion.identity, player);
+
+            // ESTA LINHA É OBRIGATÓRIA PARA O SEU CANVAS SABER QUEM É QUEM:
+            runner.SetPlayerObject(player, networkPlayerObject);
+        }
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)

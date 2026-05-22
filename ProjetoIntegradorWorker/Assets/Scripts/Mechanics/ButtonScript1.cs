@@ -12,15 +12,14 @@ public class ButtonScript : NetworkBehaviour
     [Header("Botões de movimento base")]
     [SerializeField] public Button[] buttonsMoveBase;
 
-    //[Header("Botão de movimento especial")]
     [Networked] public NetworkObject buttonMoveSpecial { get; set; }
 
     [Header("Sprite")]
     [SerializeField] public Sprite[] sprites;
     [SerializeField] public Sprite[] cenario;
-    [Networked, OnChangedRender(nameof(ChangeScenario))] public NetworkObject backGround1 { set; get; }
-    [Networked, OnChangedRender(nameof(ChangeScenario))] public NetworkObject backGround2 { set; get; }
-    [Networked, OnChangedRender(nameof(ChangeScenario))] public NetworkObject backGround3 { set; get; }
+    [SerializeField] public GameObject backGround1;
+    [SerializeField] public GameObject backGround2;
+    [SerializeField] public GameObject backGround3;
 
     [Header("Animação")]
     private GameObject animManager;
@@ -31,153 +30,195 @@ public class ButtonScript : NetworkBehaviour
     public string bottomNormal;
     public string bottomSpecial;
 
+    [Networked] private int currentAnimation { get; set; }
+
     void Start()
     {
+        Animation();
+        IsNetworkReady();
+    }
 
+    void Animation()
+    {
         animManager = GameObject.Find("AnimManager");
 
-        bottomSimple1 = animManager.gameObject.GetComponent<ChooseAnim>().bottonSimple.ElementAt(0);
-        bottomSimple2 = animManager.gameObject.GetComponent<ChooseAnim>().bottonSimple.ElementAt(1);
-        bottomNormal = animManager.gameObject.GetComponent<ChooseAnim>().bottonNormal.ElementAt(0);
-        bottomSpecial = animManager.gameObject.GetComponent<ChooseAnim>().bottonSpecial.ElementAt(0);
+        if (animManager != null)
+        {
+            var chooseAnim = animManager.GetComponent<ChooseAnim>();
+            if (chooseAnim != null)
+            {
+                // Proteção caso as listas não tenham a quantidade esperada de elementos
+                if (chooseAnim.bottonSimple.Count > 0) bottomSimple1 = chooseAnim.bottonSimple.ElementAt(0);
+                if (chooseAnim.bottonSimple.Count > 1) bottomSimple2 = chooseAnim.bottonSimple.ElementAt(1);
+                if (chooseAnim.bottonNormal.Count > 0) bottomNormal = chooseAnim.bottonNormal.ElementAt(0);
+                if (chooseAnim.bottonSpecial.Count > 0) bottomSpecial = chooseAnim.bottonSpecial.ElementAt(0);
+            }
+        }
 
-        IsNetworkReady();
-
-        
     }
-
     void ChangeScenario()
     {
-        if (gameManager.score >= 5)
+        if (gameManager == null) return;
+
+        if (gameManager.score >= 5 && backGround1 != null)
         {
             backGround1.gameObject.SetActive(true);
-            backGround2.gameObject.SetActive(false);
-            backGround3.gameObject.SetActive(false);
+            if (backGround2 != null) backGround2.gameObject.SetActive(false);
+            if (backGround3 != null) backGround3.gameObject.SetActive(false);
         }
-        if (gameManager.score >= 10)
+        if (gameManager.score >= 25 && backGround2 != null)
         {
-            backGround1.gameObject.SetActive(false);
             backGround2.gameObject.SetActive(true);
-            backGround3.gameObject.SetActive(false);
+            if (backGround1 != null) backGround1.gameObject.SetActive(false);
+            if (backGround3 != null) backGround3.gameObject.SetActive(false);
         }
-        if (gameManager.score >= 50)
+        if (gameManager.score >= 50 && backGround3 != null)
         {
-            backGround1.gameObject.SetActive(false);
-            backGround2.gameObject.SetActive(false);
             backGround3.gameObject.SetActive(true);
+            if (backGround1 != null) backGround1.gameObject.SetActive(false);
+            if (backGround2 != null) backGround2.gameObject.SetActive(false);
         }
     }
-
 
     public override void FixedUpdateNetwork()
     {
-
-        if (HasStateAuthority == false)
-            return;
+        
         if (player == null && Runner != null && Runner.IsRunning)
         {
             player = Runner.GetPlayerObject(Runner.LocalPlayer);
         }
+        
+    }
+
+    public override void Render()
+    {
+        if (gameManager == null)
+        {
+            gameManager = FindAnyObjectByType<GameManager>();
+        }
         ChangeScenario();
 
-
-
+        ApplyNetworkedAnimation();
     }
 
     private bool IsNetworkReady()
     {
-       
         if (Object == null || !Object.IsValid || player == null)
         {
-            Debug.LogWarning("Fusion ainda não spawnou este objeto ou o Player não foi sincronizado.");
+            
             return false;
         }
         return true;
     }
 
-    public void ClickMoveBaseFirst(Button botao)
+    private void ApplyNetworkedAnimation()
     {
+        
 
-
-        if (Input.touchCount == 1 && buttonsMoveBase[0])
+        if (playerAnimator == null)
         {
-
-            var spriteAtual = player.GetComponent<SpriteRenderer>();
-            spriteAtual.sprite = sprites[0];
-            gameManager.Rpc_GainPoints(1);
-            playerAnimator.SetBool(bottomSimple1, true);
-            playerAnimator.SetBool(bottomSimple2, false);
-            playerAnimator.SetBool(bottomNormal, false);
-            playerAnimator.SetBool(bottomSpecial, false);
             
+            if (player != null)
+            {
+                playerAnimator = player.GetComponentInChildren<Animator>();
+            }
+            else
+            {
+                
+                playerAnimator = FindAnyObjectByType<Animator>();
+            }
         }
 
+        
+        if (playerAnimator != null && playerAnimator.runtimeAnimatorController != null)
+        {
+            if (!string.IsNullOrEmpty(bottomSimple1)) playerAnimator.SetBool(bottomSimple1, currentAnimation == 1);
+            if (!string.IsNullOrEmpty(bottomSimple2)) playerAnimator.SetBool(bottomSimple2, currentAnimation == 2);
+            if (!string.IsNullOrEmpty(bottomNormal)) playerAnimator.SetBool(bottomNormal, currentAnimation == 3);
+            if (!string.IsNullOrEmpty(bottomSpecial)) playerAnimator.SetBool(bottomSpecial, currentAnimation == 4);
+        }
+    }
+
+
+    //private void SetAnimatorBools(bool s1, bool s2, bool normal, bool special)
+    //{
+
+    //    if (playerAnimator == null && player != null)
+    //    {
+    //        playerAnimator = player.GetComponentInChildren<Animator>();
+    //    }
+
+
+    //    if (playerAnimator != null && playerAnimator.runtimeAnimatorController != null)
+    //    {
+    //        if (!string.IsNullOrEmpty(bottomSimple1)) playerAnimator.SetBool(bottomSimple1, s1);
+    //        if (!string.IsNullOrEmpty(bottomSimple2)) playerAnimator.SetBool(bottomSimple2, s2);
+    //        if (!string.IsNullOrEmpty(bottomNormal)) playerAnimator.SetBool(bottomNormal, normal);
+    //        if (!string.IsNullOrEmpty(bottomSpecial)) playerAnimator.SetBool(bottomSpecial, special);
+    //    }
+    //    else
+    //    {
+    //        Debug.LogWarning($"Não foi possível animar: O playerAnimator está ausente ou sem Controller na cena.");
+    //    }
+    //}
+
+
+
+    public void ClickMoveBaseFirst(Button botao)
+    {
+        if (player == null) return;
+
+        var spriteAtual = player.GetComponent<SpriteRenderer>();
+        if (spriteAtual != null && sprites.Length > 0) spriteAtual.sprite = sprites[0];
+
+        if (gameManager != null) gameManager.Rpc_GainPoints(1);
+
+        currentAnimation = 1;
     }
 
     public void ClickMoveBaseSecond()
     {
-
+        if (player == null) return;
 
         var spriteAtual = player.GetComponent<SpriteRenderer>();
-        if (spriteAtual != null)
+        if (spriteAtual != null && sprites.Length > 1)
         {
             spriteAtual.sprite = sprites[1];
         }
-        if (buttonMoveSpecial)
-        {
-            spriteAtual.sprite = sprites[1];
-        }
-        gameManager.Rpc_GainPoints(5);
-        playerAnimator.SetBool(bottomSimple1, false);
-        playerAnimator.SetBool(bottomSimple2, true);
-        playerAnimator.SetBool(bottomNormal, false);
-        playerAnimator.SetBool(bottomSpecial, false);
 
+        if (gameManager != null) gameManager.Rpc_GainPoints(5);
 
+        //SetAnimatorBools(false, true, false, false);
+        currentAnimation = 2;
     }
 
     public void ClickMoveBaseThird()
     {
-        if (buttonsMoveBase[2])
+        if (player == null) return;
+
+        var spriteAtual = player.GetComponent<SpriteRenderer>();
+        if (spriteAtual != null && sprites.Length > 2)
         {
-
-            var spriteAtual = player.GetComponent<SpriteRenderer>();
-            if (spriteAtual != null)
-            {
-                spriteAtual.sprite = sprites[2];
-            }
-            if (buttonMoveSpecial)
-            {
-                spriteAtual.sprite = sprites[2];
-            }
-            gameManager.Rpc_GainPoints(5);
-            playerAnimator.SetBool(bottomSimple1, false);
-            playerAnimator.SetBool(bottomSimple2, false);
-            playerAnimator.SetBool(bottomNormal, true);
-            playerAnimator.SetBool(bottomSpecial, false);
-
+            spriteAtual.sprite = sprites[2];
         }
 
+        if (gameManager != null) gameManager.Rpc_GainPoints(5);
+
+        currentAnimation = 3;
     }
 
     public void ClickMoveBaseSpecial(Button botao)
     {
+        if (player == null) return;
 
         var spriteAtual = player.GetComponent<SpriteRenderer>();
-        if (spriteAtual != null)
+        if (spriteAtual != null && sprites.Length > 3)
         {
             spriteAtual.sprite = sprites[3];
         }
-        if (buttonMoveSpecial)
-        {
-            spriteAtual.sprite = sprites[3];
-        }
-        gameManager.Rpc_GainPoints(10);
-        playerAnimator.SetBool(bottomSimple1, false);
-        playerAnimator.SetBool(bottomSimple2, false);
-        playerAnimator.SetBool(bottomNormal, false);
-        playerAnimator.SetBool(bottomSpecial, true);
+
+        if (gameManager != null) gameManager.Rpc_GainPoints(10);
+
+        currentAnimation = 4;
     }
-
-
 }

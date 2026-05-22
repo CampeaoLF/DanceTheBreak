@@ -21,7 +21,7 @@ public class ClosePanelScript : MonoBehaviour
 
 public void OnClick()
     {
-        if (Input.touchCount == 1)
+        if (painel != null)
         {
             painel.SetActive(false);
         }

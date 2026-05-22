@@ -9,7 +9,15 @@ public class GameManager : NetworkBehaviour
     [SerializeField] public GameObject background;
     [SerializeField] public TextMeshProUGUI scoreNumber;
     [SerializeField] public Button special;
+    [SerializeField] public int specialCount = 0;
 
+    [SerializeField] public Image buttonCooldownImage;
+    [SerializeField] public Image buttonCooldownImage2;
+    [SerializeField] public Image buttonCooldownImage3;
+
+    [SerializeField] public Button buttonSimple1;
+    [SerializeField] public Button buttonSimple2;
+    [SerializeField] public Button buttonNormal;
 
     void Start()
     {
@@ -19,6 +27,49 @@ public class GameManager : NetworkBehaviour
     void UpdateScore()
     {
         scoreNumber.text = score.ToString();
+        if (buttonCooldownImage.fillAmount > 0)
+        {
+            buttonCooldownImage.fillAmount -= 0.5f * Time.deltaTime;
+            buttonSimple1.enabled = false;
+            buttonSimple2.enabled = false;
+            buttonNormal.enabled = false;
+
+
+        }
+        else
+        {
+            buttonSimple1.enabled = true;
+            buttonSimple2.enabled = true;
+            buttonNormal.enabled = true;
+        }
+
+        if (buttonCooldownImage2.fillAmount > 0)
+        {
+            buttonCooldownImage2.fillAmount -= 0.5f * Time.deltaTime;
+            buttonSimple1.enabled = false;
+            buttonSimple2.enabled = false;
+            buttonNormal.enabled = false;
+        }
+        else
+        {
+            buttonSimple1.enabled = true;
+            buttonSimple2.enabled = true;
+            buttonNormal.enabled = true;
+        }
+
+        if (buttonCooldownImage3.fillAmount > 0)
+        {
+            buttonCooldownImage3.fillAmount -= 0.5f * Time.deltaTime;
+            buttonSimple1.enabled = false;
+            buttonSimple2.enabled = false;
+            buttonNormal.enabled = false;
+        }
+        else
+        {
+            buttonSimple1.enabled = true;
+            buttonSimple2.enabled = true;
+            buttonNormal.enabled = true;
+        }
     }
 
 
@@ -36,27 +87,48 @@ public class GameManager : NetworkBehaviour
 
     private void EnabledMoveSpecial()
     {
-        if (score < 10) return;
         ButtonScript buttonScript = FindAnyObjectByType<ButtonScript>();
-        if (!buttonScript && !buttonScript.buttonMoveSpecial) return;
-        buttonScript.buttonMoveSpecial.gameObject.SetActive(true);
+        if (buttonScript == null || buttonScript.buttonMoveSpecial == null) return;
+
+        if (specialCount < 10)
+        {
+            buttonScript.buttonMoveSpecial.gameObject.SetActive(false);
+        }
+        else if (specialCount == 10)
+        {
+            buttonScript.buttonMoveSpecial.gameObject.SetActive(true);
+        }
     }
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void Rpc_GainPoints(int value)
     {
         score = score + value;
     }
+
+    public void AddSpecialCount(int value)
+    {
+        specialCount = specialCount + value;
+    }
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void Rpc_Special()
     {
         var buttonSpecial = special.GetComponent<Button>();
-        if (score >= 10)
+        if (specialCount == 10)
         {
             buttonSpecial.interactable = true;
         }
-        else
+
+        if (specialCount <= 9)
         {
             buttonSpecial.interactable = false;
         }
+    }
+    public void ButtonCoolDown()
+    {
+
+        buttonCooldownImage.fillAmount = 1;
+        buttonCooldownImage2.fillAmount = 1;
+        buttonCooldownImage3.fillAmount = 1;
+
     }
 }
