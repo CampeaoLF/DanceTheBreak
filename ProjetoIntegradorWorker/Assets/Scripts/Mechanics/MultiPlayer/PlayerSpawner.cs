@@ -22,19 +22,19 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
             buttonScript = FindFirstObjectByType<ButtonScript>();
 
         }
-        if (player == Runner.LocalPlayer)
-        {
-            var networkObject = Runner.Spawn(bGirlPrefab, Vector2.zero, Quaternion.identity, player); // prefab escolhido, position 0,0,0 , rotação padrão e autoridade de Input
+        //if (player == Runner.LocalPlayer)
+        //{
+        //    var networkObject = Runner.Spawn(bGirlPrefab, Vector2.zero, Quaternion.identity, player); // prefab escolhido, position 0,0,0 , rotação padrão e autoridade de Input
 
-            Runner.SetPlayerObject(player, networkObject);
+        //    Runner.SetPlayerObject(player, networkObject);
 
-            if (buttonScript != null)
-            {
-                buttonScript.player = networkObject;
-            }
-            buttonScript = FindFirstObjectByType<ButtonScript>();
+        //    if (buttonScript != null)
+        //    {
+        //        buttonScript.player = networkObject;
+        //    }
+        //    buttonScript = FindFirstObjectByType<ButtonScript>();
 
-        }
+        //}
 
     }
 

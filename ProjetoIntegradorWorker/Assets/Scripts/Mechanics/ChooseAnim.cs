@@ -21,6 +21,7 @@ public class ChooseAnim : NetworkBehaviour
     public int qtdMaxNormal = 1;
     public int qtdMaxSpecial = 1;
 
+
     public GameObject Runner;
 
 
@@ -29,6 +30,7 @@ public class ChooseAnim : NetworkBehaviour
     public Button nextPanelNormal;
     public Button nextPanelSpecial;
     public Button game;
+    public Button lobby;
 
 
     public void ChooseSimple(string name)
@@ -111,27 +113,27 @@ public class ChooseAnim : NetworkBehaviour
         Debug.Log("Quantidade de escolhas: " + bottonSpecial.Count);
         if (bottonSpecial.Count == qtdMaxSpecial)
         {
-            game.gameObject.SetActive(true);
+            lobby.gameObject.SetActive(true);
         }
 
     }
 
-    public void MainGame()
+    public void Lobby()
     {
-        // Procura o NetworkRunner que veio da cena anterior graças ao DontDestroyOnLoad
         NetworkRunner runner = FindObjectOfType<NetworkRunner>();
 
         if (runner != null && runner.IsRunning)
         {
-            // Substituir "SetActiveScene" por "LoadScene" para corrigir o erro CS1061
-            runner.LoadScene("MainGame", UnityEngine.SceneManagement.LoadSceneMode.Single);
+
+            runner.LoadScene("Lobby", UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
         else
         {
-            // Caso estejas a testar offline sem passar pelo menu
-            SceneManager.LoadScene("MainGame");
+
+            SceneManager.LoadScene("Lobby");
         }
     }
+   
     void Start()
     {
         DontDestroyOnLoad(this);
